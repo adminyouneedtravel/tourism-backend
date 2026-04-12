@@ -17,4 +17,6 @@ ENV LOG_DIR=/tmp/logs
 
 RUN python manage.py collectstatic --no-input
 
-CMD ["sh", "-c", "python manage.py migrate --no-input && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120"]
+RUN chmod +x start.sh
+
+CMD ["./start.sh"]
