@@ -1,7 +1,7 @@
 # apps/pricing/admin.py
 
 from django.contrib import admin
-from .models import Season, RoomPrice
+from .models import Season, RoomPrice, ExchangeRate
 
 
 class RoomPriceInline(admin.TabularInline):
@@ -26,3 +26,11 @@ class SeasonAdmin(admin.ModelAdmin):
 class RoomPriceAdmin(admin.ModelAdmin):
     list_display = ['season', 'room_type', 'price_per_night', 'breakfast_included']
     list_filter  = ['season__hotel', 'breakfast_included']
+
+
+@admin.register(ExchangeRate)
+class ExchangeRateAdmin(admin.ModelAdmin):
+    list_display  = ['from_currency', 'to_currency', 'rate', 'valid_from', 'valid_to', 'is_active']
+    list_filter   = ['from_currency', 'to_currency', 'is_active']
+    list_editable = ['is_active']
+    ordering      = ['-valid_from']

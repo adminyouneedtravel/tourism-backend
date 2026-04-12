@@ -13,7 +13,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-this-in-production-
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
 INSTALLED_APPS = [
     # Django Core
@@ -148,49 +148,52 @@ SIMPLE_JWT = {
 }
 
 
-# ─── Redis Cache ──────────────────────────────────────────
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.getenv("REDIS_URL", "redis://127.0.0.1:6379/1"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+# ─── Cache (Redis if available, else LocMemCache) ─────────
+REDIS_URL = os.getenv("REDIS_URL", "")
 
-            "CONNECTION_POOL_KWARGS": {"max_connections": 50},
-            "COMPRESSOR": "django_redis.compressors.zlib.ZlibCompressor",
-            "IGNORE_EXCEPTIONS": True,  # لا يوقف الموقع إذا تعطل Redis
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": REDIS_URL,
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                "IGNORE_EXCEPTIONS": True,
+            },
+            "KEY_PREFIX": "ynt",
+            "TIMEOUT": 60 * 15,
         },
-        "KEY_PREFIX": "ynt",
-        "TIMEOUT": 60 * 15,  # 15 دقيقة افتراضي
-    },
-    # Cache منفصل لأسعار المزودين — مدة أقصر
-    "prices": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.getenv("REDIS_URL_PRICES", "redis://127.0.0.1:6379/2"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-
-            "IGNORE_EXCEPTIONS": True,
+        "prices": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": REDIS_URL,
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                "IGNORE_EXCEPTIONS": True,
+            },
+            "KEY_PREFIX": "ynt_prices",
+            "TIMEOUT": 60 * 60,
         },
-        "KEY_PREFIX": "ynt_prices",
-        "TIMEOUT": 60 * 60,  # ساعة واحدة للأسعار
-    },
-    # Cache للـ sessions
-    "sessions": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.getenv("REDIS_URL_SESSIONS", "redis://127.0.0.1:6379/3"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "IGNORE_EXCEPTIONS": True,
+        "sessions": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": REDIS_URL,
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                "IGNORE_EXCEPTIONS": True,
+            },
+            "KEY_PREFIX": "ynt_sess",
+            "TIMEOUT": 60 * 60 * 24 * 7,
         },
-        "KEY_PREFIX": "ynt_sess",
-        "TIMEOUT": 60 * 60 * 24 * 7,  # أسبوع للـ sessions
-    },
-}
-
-# استخدام Redis للـ Sessions بدل قاعدة البيانات
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-SESSION_CACHE_ALIAS = "sessions"
+    }
+    SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+    SESSION_CACHE_ALIAS = "sessions"
+else:
+    # Fallback: LocMemCache (no Redis needed)
+    CACHES = {
+        "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
+        "prices": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
+        "sessions": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
+    }
+    SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
 # Cache Timeouts
 CACHE_TTL = {
@@ -202,12 +205,13 @@ CACHE_TTL = {
 }
 
 # ─── CORS ─────────────────────────────────────────────────
+_extra_cors = [o for o in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if o]
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',   # React CRA
-    'http://localhost:5173',   # Vite (React/Vue)
+    'http://localhost:3000',
+    'http://localhost:5173',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:5173',
-]
+] + _extra_cors
 
 CORS_ALLOW_CREDENTIALS = True  # ضروري لإرسال Authorization header
 
@@ -250,7 +254,7 @@ LOGGING = {
         },
         'file_errors': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs/errors.log',
+            'filename': os.getenv('LOG_DIR', str(BASE_DIR / 'logs')) + '/errors.log',
             'maxBytes': 5 * 1024 * 1024,  # 5MB
             'backupCount': 3,
             'formatter': 'verbose',
@@ -258,7 +262,7 @@ LOGGING = {
         },
         'file_activity': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs/activity.log',
+            'filename': os.getenv('LOG_DIR', str(BASE_DIR / 'logs')) + '/activity.log',
             'maxBytes': 5 * 1024 * 1024,  # 5MB
             'backupCount': 3,
             'formatter': 'verbose',

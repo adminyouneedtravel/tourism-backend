@@ -1,39 +1,56 @@
-# apps/packages/admin.py
-
 from django.contrib import admin
-from .models import TourPackage, PackageCity, PackageCityHotel, PackageCityService
+from .models import (
+    CustomPackage, PackagePaxConfig, PackageCity,
+    PackageHotel, PackageFlight, PackageTransfer,
+    PackageTour, PackageProfitMargin, PackagePricing
+)
 
 
-class PackageCityHotelInline(admin.TabularInline):
-    model  = PackageCityHotel
-    extra  = 1
-    fields = ['hotel', 'nights', 'is_default']
+class PackagePaxConfigInline(admin.StackedInline):
+    model = PackagePaxConfig
+    extra = 0
 
 
-class PackageCityServiceInline(admin.TabularInline):
-    model  = PackageCityService
-    extra  = 1
-    fields = ['service', 'custom_price']
+class PackageCityInline(admin.TabularInline):
+    model = PackageCity
+    extra = 0
 
 
-class PackageCityInline(admin.StackedInline):
-    model   = PackageCity
-    extra   = 1
-    fields  = ['city', 'nights', 'min_nights', 'max_nights']
-    show_change_link = True
+class PackageHotelInline(admin.TabularInline):
+    model = PackageHotel
+    extra = 0
 
 
-@admin.register(TourPackage)
-class TourPackageAdmin(admin.ModelAdmin):
-    list_display        = ['name', 'base_price', 'currency', 'is_customizable', 'is_active']
-    list_filter         = ['is_active', 'is_customizable', 'currency']
-    search_fields       = ['name']
-    prepopulated_fields = {'slug': ('name',)}
-    inlines             = [PackageCityInline]
+class PackageFlightInline(admin.TabularInline):
+    model = PackageFlight
+    extra = 0
 
 
-@admin.register(PackageCity)
-class PackageCityAdmin(admin.ModelAdmin):
-    list_display = ['package', 'city', 'nights']
-    list_filter  = ['city__country']
-    inlines      = [PackageCityHotelInline, PackageCityServiceInline]
+class PackageTransferInline(admin.TabularInline):
+    model = PackageTransfer
+    extra = 0
+
+
+class PackageTourInline(admin.TabularInline):
+    model = PackageTour
+    extra = 0
+
+
+class PackageProfitMarginInline(admin.TabularInline):
+    model = PackageProfitMargin
+    extra = 0
+
+
+@admin.register(CustomPackage)
+class CustomPackageAdmin(admin.ModelAdmin):
+    list_display = ['title', 'agency', 'status', 'total_nights', 'currency_cost', 'currency_sell', 'created_at']
+    list_filter = ['status', 'currency_cost', 'currency_sell']
+    search_fields = ['title']
+    inlines = [
+        PackagePaxConfigInline,
+        PackageCityInline,
+        PackageFlightInline,
+        PackageTransferInline,
+        PackageTourInline,
+        PackageProfitMarginInline,
+    ]

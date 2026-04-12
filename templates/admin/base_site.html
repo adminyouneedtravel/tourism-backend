@@ -1,63 +1,10 @@
+{% extends "admin/base.html" %}
 {% load static i18n %}
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg px-4 py-3 shadow-sm" style="background: #1e2937; color: #fff;">
-    <div class="container-fluid">
-        
-        <!-- Logo + اسم النظام -->
-     
+{% block title %}{{ title }} | يو نيد ترافيل{% endblock %}
 
-        <!-- Right side -->
-        <div class="d-flex align-items-center gap-4">
-            
-            <!-- اسم الأدمن -->
-            <div class="d-flex align-items-center">
-                <span class="text-white me-2">مرحباً، الأدمن</span>
-                <i class="fa fa-user-circle fa-2x text-white"></i>
-            </div>
-
-            <!-- زر الخروج -->
-            <a href="{% url 'admin:logout' %}" class="btn btn-outline-light btn-sm">
-                <i class="fa fa-sign-out-alt"></i> خروج
-            </a>
-        </div>
-    </div>
-</nav>
-<!-- Sidebar -->
-<div class="d-flex">
-    <div class="sidebar p-3" style="width: 260px; background: #1e2937; min-height: 100vh; color: #cbd5e1;">
-        <ul class="nav flex-column">
-            
-           
-            
-            <li class="nav-item mb-1">
-                <a href="{% url 'admin:packages_tourpackage_changelist' %}" class="nav-link d-flex align-items-center">
-                    <i class="fa fa-suitcase me-3"></i>
-                    <span>الباقات السياحية</span>
-                </a>
-            </li>
-            
-            <li class="nav-item mb-1">
-                <a href="{% url 'admin:services_service_changelist' %}" class="nav-link d-flex align-items-center">
-                    <i class="fa fa-concierge-bell me-3"></i>
-                    <span>الخدمات</span>
-                </a>
-            </li>
-            
-            <li class="nav-item mb-1">
-                <a href="{% url 'admin:hotels_hotel_changelist' %}" class="nav-link d-flex align-items-center">
-                    <i class="fa fa-hotel me-3"></i>
-                    <span>الفنادق + أنواع الغرف + المواسم + الأسعار</span>
-                </a>
-            </li>
-            
-            <li class="nav-item mb-1">
-                <a href="{% url 'admin:locations_country_changelist' %}" class="nav-link d-flex align-items-center">
-                    <i class="fa fa-globe me-3"></i>
-                    <span>الدول والمدن</span>
-                </a>
-            </li>
-            
-
-        </ul>
-    </div>
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">يو نيد ترافيل</a>
+</h1>
+{% endblock %}

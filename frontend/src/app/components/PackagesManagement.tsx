@@ -8,6 +8,7 @@ import {
   Sparkles, Users, UserPlus
 } from 'lucide-react';
 import { BookingWizard } from './BookingWizard';
+import { CustomPackageWizard } from './CustomPackageWizard';
 import type { AuthUser } from '../auth/authService';
 
 // ─── Types ────────────────────────────────────────────────
@@ -121,7 +122,7 @@ function AgencyPackageCard({ pkg, commissionRate, onBook, onView }: {
 
       {/* Body */}
       <div className="p-4">
-        <h3 className="font-bold text-gray-900 text-base leading-snug mb-1">{pkg.name}</h3>
+        <h3 className="font-bold text-gray-900 text-base leading-snug mb-1">{pkg.name || pkg.title}</h3>
         <p className="text-xs text-gray-500 line-clamp-2 mb-3">{pkg.description}</p>
 
         {/* Cities */}
@@ -146,7 +147,7 @@ function AgencyPackageCard({ pkg, commissionRate, onBook, onView }: {
             <span className="text-xs text-gray-500">سعر الباقة</span>
             <div className="flex items-baseline gap-1">
               {hasDiscount && <span className="text-xs line-through text-gray-400">{pkg.base_price}</span>}
-              <span className="text-lg font-bold text-emerald-600">{pkg.final_price.toFixed(0)}</span>
+              <span className="text-lg font-bold text-emerald-600">{(pkg.final_price ?? 0).toFixed(0)}</span>
               <span className="text-xs text-gray-500">{pkg.currency}</span>
             </div>
           </div>
@@ -198,7 +199,7 @@ function PackageCard({ pkg, onEdit, onDelete, onView, onBook }: {
         </div>
       </div>
       <div className="p-4">
-        <h3 className="font-bold text-gray-900 text-base leading-snug mb-1">{pkg.name}</h3>
+        <h3 className="font-bold text-gray-900 text-base leading-snug mb-1">{pkg.name || pkg.title}</h3>
         <p className="text-xs text-gray-500 line-clamp-2 mb-3">{pkg.description}</p>
         <div className="flex flex-wrap gap-1 mb-3">
           {pkg.cities.slice(0,3).map((c,i)=>(
@@ -216,7 +217,7 @@ function PackageCard({ pkg, onEdit, onDelete, onView, onBook }: {
           <div>
             {hasDiscount && <p className="text-xs line-through text-gray-400">{pkg.base_price} {pkg.currency}</p>}
             <div className="flex items-baseline gap-1">
-              <span className="text-xl font-bold text-emerald-600">{pkg.final_price.toFixed(0)}</span>
+              <span className="text-xl font-bold text-emerald-600">{(pkg.final_price ?? 0).toFixed(0)}</span>
               <span className="text-xs text-gray-500">{pkg.currency}</span>
             </div>
           </div>
@@ -261,7 +262,7 @@ function PackageDetailsModal({ pkg, onClose, onEdit, isAdmin }: {
             <div>
               {pkg.discount_percentage && <p className="text-xs line-through text-gray-400">{pkg.base_price} {pkg.currency}</p>}
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-emerald-600">{pkg.final_price.toFixed(0)}</span>
+                <span className="text-3xl font-bold text-emerald-600">{(pkg.final_price ?? 0).toFixed(0)}</span>
                 <span className="text-gray-500">{pkg.currency}</span>
                 {pkg.discount_percentage && <span className="text-sm bg-red-100 text-red-500 px-2 py-0.5 rounded-full">-{pkg.discount_percentage}%</span>}
               </div>
@@ -820,6 +821,7 @@ export function PackagesManagement({ user }: Props = {}) {
   const [showModal, setShowModal]   = useState(false);
   const [modalIsCustomizable, setModalIsCustomizable] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
+  const [showCustomWizard, setShowCustomWizard] = useState(false);
   const [wizardPackage, setWizardPackage] = useState<TourPackage|null>(null);
   const [editingPkg, setEditingPkg] = useState<TourPackage|null>(null);
   const [viewingPkg, setViewingPkg] = useState<TourPackage|null>(null);
@@ -861,7 +863,7 @@ export function PackagesManagement({ user }: Props = {}) {
   const visiblePackages = isAdmin ? packages : packages.filter(p => p.is_active);
 
   const filtered = visiblePackages.filter(p => {
-    const ms = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const ms = (p.name || p.title || '').toLowerCase().includes(searchQuery.toLowerCase());
     const mc = !filterCountry || p.cities.some(c => c.country_name?.includes(filterCountry));
     return ms && mc;
   });
@@ -958,7 +960,7 @@ export function PackagesManagement({ user }: Props = {}) {
           {/* أزرار Admin */}
           {isAdmin && (
             <>
-              <button onClick={()=>{setEditingPkg(null);setModalIsCustomizable(true);setShowModal(true);}}
+              <button onClick={()=>setShowCustomWizard(true)}
                 className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white rounded-xl text-sm font-medium hover:bg-purple-700 shadow-sm">
                 <Sparkles className="w-4 h-4"/> إضافة باقة مخصصة
               </button>
@@ -1078,7 +1080,7 @@ export function PackagesManagement({ user }: Props = {}) {
                       <span className="flex items-center gap-1 text-sm text-gray-600"><Moon className="w-3.5 h-3.5"/>{pkg.total_nights}</span>
                     </td>
                     <td className="px-5 py-3">
-                      <span className="font-bold text-emerald-600 text-sm">{pkg.final_price.toFixed(0)} {pkg.currency}</span>
+                      <span className="font-bold text-emerald-600 text-sm">{(pkg.final_price ?? 0).toFixed(0)} {pkg.currency}</span>
                     </td>
                     {isAdmin
                       ? <td className="px-5 py-3">
@@ -1139,6 +1141,7 @@ export function PackagesManagement({ user }: Props = {}) {
       {showWizard && wizardPackage && <BookingWizard pkg={wizardPackage} onClose={()=>setShowWizard(false)} onSuccess={handleWizardSuccess}/>}
       {deleteTarget && <DeleteModal name={deleteTarget.name} loading={deletingId===deleteTarget.id} onConfirm={confirmDelete} onCancel={()=>setDeleteTarget(null)}/>}
       {viewingPkg && <PackageDetailsModal pkg={viewingPkg} isAdmin={isAdmin} onClose={()=>setViewingPkg(null)} onEdit={()=>{setEditingPkg(viewingPkg);setViewingPkg(null);setShowModal(true);}}/>}
+      {showCustomWizard && isAdmin && <CustomPackageWizard onClose={()=>setShowCustomWizard(false)} onSuccess={()=>{setShowCustomWizard(false);fetchAll();addToast('success','✅ تم إنشاء الباقة بنجاح');}}/> }
       {showModal && isAdmin && <PackageModal editing={editingPkg} isCustomizable={modalIsCustomizable} cities={cities} countries={countries} hotels={hotels} services={services} onSave={handleSave} onClose={()=>setShowModal(false)} saving={saving}/>}
       {showStaff && !isAdmin && user?.agency && <StaffModal agencyId={user.agency} onClose={()=>setShowStaff(false)}/>}
     </div>

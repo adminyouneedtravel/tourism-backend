@@ -184,3 +184,82 @@ class UnifiedSearchIndex(models.Model):
             models.Index(fields=['base_price', 'currency']),
         ]
         unique_together = ['content_type', 'object_id']
+
+class ContractPrice(models.Model):
+    """
+    سعر العقد المباشر مع الفندق (شراكة).
+    يُقارن مع سعر الـ API ويُعرض الأقل عند بناء الباقة.
+    """
+    ROOM_TYPE_CHOICES = [
+        ('standard',  'Standard Room'),
+        ('superior',  'Superior Room'),
+        ('deluxe',    'Deluxe Room'),
+        ('suite',     'Suite'),
+        ('twin',      'Twin Room'),
+        ('triple',    'Triple Room'),
+        ('family',    'Family Room'),
+    ]
+
+    mapping             = models.ForeignKey(
+        HotelMapping, on_delete=models.CASCADE,
+        related_name='contract_prices',
+        verbose_name='ربط الفندق بالمزود'
+    )
+    room_type           = models.CharField(
+        max_length=20, choices=ROOM_TYPE_CHOICES,
+        verbose_name='نوع الغرفة'
+    )
+    price_myr           = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        verbose_name='سعر الشراكة (MYR/غرفة/ليلة)'
+    )
+    extra_bed_price_myr = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        default=0, verbose_name='سعر السرير الإضافي (MYR/ليلة)'
+    )
+    min_pax             = models.PositiveIntegerField(
+        default=1, verbose_name='الحد الأدنى للأفراد'
+    )
+    max_pax             = models.PositiveIntegerField(
+        default=8, verbose_name='الحد الأقصى للأفراد'
+    )
+    includes_breakfast  = models.BooleanField(
+        default=False, verbose_name='يشمل الفطور'
+    )
+    valid_from          = models.DateField(verbose_name='صالح من')
+    valid_to            = models.DateField(verbose_name='صالح حتى')
+    is_active           = models.BooleanField(
+        default=True, verbose_name='فعّال'
+    )
+    notes               = models.TextField(
+        blank=True, verbose_name='ملاحظات العقد'
+    )
+    created_at          = models.DateTimeField(auto_now_add=True)
+    updated_at          = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name        = 'سعر عقد مباشر'
+        verbose_name_plural = 'أسعار العقود المباشرة'
+        unique_together     = ['mapping', 'room_type', 'min_pax', 'valid_from']
+        ordering            = ['mapping', 'room_type', 'min_pax']
+        indexes             = [
+            models.Index(fields=['mapping', 'room_type']),
+            models.Index(fields=['valid_from', 'valid_to']),
+            models.Index(fields=['is_active']),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.mapping.hotel.name} | {self.get_room_type_display()} | "
+            f"{self.min_pax}-{self.max_pax} PAX | RM{self.price_myr}/ليلة | "
+            f"{self.valid_from} → {self.valid_to}"
+        )
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.valid_from and self.valid_to:
+            if self.valid_from >= self.valid_to:
+                raise ValidationError('تاريخ البداية يجب أن يكون قبل تاريخ الانتهاء')
+        if self.min_pax and self.max_pax:
+            if self.min_pax > self.max_pax:
+                raise ValidationError('الحد الأدنى للأفراد لا يمكن أن يكون أكبر من الحد الأقصى')

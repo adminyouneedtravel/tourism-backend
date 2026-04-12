@@ -3,7 +3,7 @@ from apps.accounts.models import User, Agency
 from apps.locations.models import Country, City
 from apps.hotels.models import Hotel
 from apps.services.models import Service
-from apps.packages.models import TourPackage
+from apps.packages.models import CustomPackage
 from apps.pricing.models import RoomPrice
 
 
@@ -39,7 +39,7 @@ class Booking(models.Model):
         default='pending', verbose_name="حالة الحجز"
     )
     package      = models.ForeignKey(
-        TourPackage, on_delete=models.SET_NULL,
+        CustomPackage, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='bookings',
         verbose_name="الباقة السياحية"
     )

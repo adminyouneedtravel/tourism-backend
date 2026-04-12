@@ -15,11 +15,13 @@ import { ExtranetManagement }     from './components/ExtranetManagement';
 import { AnalyticsReports }       from './components/AnalyticsReports';
 import { SettingsPage }           from './components/SettingsPage';
 import { LoginPage }              from './auth/LoginPage';
+import { HomePage }               from './pages/HomePage';
 import { getStoredUser, clearAuth } from './auth/authService';
 import type { AuthUser }          from './auth/authService';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [showLogin, setShowLogin] = useState(false);
   const [user, setUser]           = useState<AuthUser | null>(null);
   const [checking, setChecking]   = useState(true);
 
@@ -47,7 +49,10 @@ export default function App() {
   }
 
   if (!user) {
-    return <LoginPage onSuccess={handleLoginSuccess} />;
+    if (showLogin) {
+      return <LoginPage onSuccess={handleLoginSuccess} />;
+    }
+    return <HomePage onLogin={() => setShowLogin(true)} />;
   }
 
   const isAdmin = user.role === 'super_admin' || user.role === 'admin';
