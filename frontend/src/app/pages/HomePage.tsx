@@ -206,7 +206,7 @@ export function HomePage({ onLogin }: HomePageProps) {
   /* ── جلب البيانات الحقيقية ─────────────────── */
   useEffect(() => {
     // Hotels — public endpoint لا يحتاج token
-    fetch(`http://127.0.0.1:8000${API.hotels.list}?limit=3`)
+    fetch(`${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"}${API.hotels.list}?limit=3`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data) {
@@ -218,7 +218,7 @@ export function HomePage({ onLogin }: HomePageProps) {
       .finally(() => setLoadingHotels(false));
 
     // Packages — public endpoint
-    fetch(`http://127.0.0.1:8000${API.packages.list}?limit=3`)
+    fetch(`${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"}${API.packages.list}?limit=3`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data) {
@@ -230,7 +230,7 @@ export function HomePage({ onLogin }: HomePageProps) {
       .finally(() => setLoadingPackages(false));
 
     // Dashboard stats — يعمل بدون login (أرقام عامة فقط)
-    fetch(`http://127.0.0.1:8000${API.bookings.dashboardStats}`)
+    fetch(`${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"}${API.bookings.dashboardStats}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data) {

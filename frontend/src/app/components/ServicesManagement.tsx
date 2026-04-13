@@ -159,7 +159,7 @@ function ServiceCard({ service, cities, categories, onEdit, onDelete }: {
     : null;
 
   const imgUrl = service.image
-    ? (service.image.startsWith('http') ? service.image : `http://127.0.0.1:8000${service.image}`)
+    ? (service.image.startsWith('http') ? service.image : `${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"}${service.image}`)
     : null;
 
   return (
@@ -311,7 +311,7 @@ function ServiceModal({ editing, cities, countries, categories, onSave, onClose,
   });
   const [imageFile, setImageFile] = useState<File|null>(null);
   const [imagePreview, setImagePreview] = useState<string|null>(
-    editing?.image ? (editing.image.startsWith('http') ? editing.image : `http://127.0.0.1:8000${editing.image}`) : null
+    editing?.image ? (editing.image.startsWith('http') ? editing.image : `${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"}${editing.image}`) : null
   );
   const [showAddCat, setShowAddCat] = useState(false);
   const [savingCat, setSavingCat] = useState(false);
