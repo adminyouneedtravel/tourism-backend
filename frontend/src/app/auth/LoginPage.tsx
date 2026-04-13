@@ -5,7 +5,7 @@ import { Eye, EyeOff, Loader2, Globe, Lock, User, Building2,
 import { login, saveAuth } from './authService';
 import type { AuthUser } from './authService';
 
-const BASE = 'http://127.0.0.1:8000';
+const BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 interface Props { onSuccess: (user: AuthUser) => void; }
 
